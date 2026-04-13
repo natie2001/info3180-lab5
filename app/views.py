@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify, current_app
 from werkzeug.utils import secure_filename
+from flask_wtf.csrf import generate_csrf
 from .forms import MovieForm
 from .models import Movie
 from . import db
@@ -65,6 +66,10 @@ def send_text_file(file_name):
     file_dot_text = file_name + '.txt'
     return current_app.send_static_file(file_dot_text)
 
+
+@views.route('/api/v1/csrf-token', methods=['GET'])
+def get_csrf():
+    return jsonify({'csrf_token': generate_csrf()})
 
 @views.after_app_request
 def add_header(response):

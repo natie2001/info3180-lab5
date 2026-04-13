@@ -34,3 +34,6 @@ venv
 # Environment Variables
 .env
 .flaskenv
+
+app/uploads/*
+!app/uploads/.gitkeep

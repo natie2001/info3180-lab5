@@ -1,6 +1,18 @@
 <template>
   <form id="movieForm" @submit.prevent="saveMovie" class="container mt-4">
     
+    <div v-if="successMessage" class="alert alert-success">
+      {{ successMessage }}
+    </div>
+
+    <div v-if="errors.length" class="alert alert-danger">
+      <ul class="mb-0">
+        <li v-for="(error, index) in errors" :key="index">
+          {{ error }}
+        </li>
+      </ul>
+    </div>
+
     <div class="mb-3">
       <label class="form-label">Movie Title</label>
       <input type="text" name="title" class="form-control" />
@@ -17,13 +29,15 @@
     </div>
 
     <button type="submit" class="btn btn-primary">Submit</button>
-
   </form>
 </template>
+
 <script setup>
 import { ref, onMounted } from "vue";
 
 let csrf_token = ref("");
+let errors = ref([]);
+let successMessage = ref("");
 
 function getCsrfToken() {
   fetch("/api/v1/csrf-token")
@@ -53,6 +67,15 @@ function saveMovie() {
     .then((response) => response.json())
     .then((data) => {
       console.log(data);
+
+      if (data.errors) {
+        errors.value = data.errors;
+        successMessage.value = "";
+      } else {
+        successMessage.value = data.message;
+        errors.value = [];
+        movieForm.reset();
+      }
     })
     .catch((error) => {
       console.log(error);

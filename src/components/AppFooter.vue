@@ -1,17 +1,19 @@
 <template>
-      <footer class="mt-5">
-          <div class="container">
-              <p>Copyright &copy {{ year }} Flask Inc.</p>
-          </div>
-      </footer>
+  <footer class="bg-light text-center py-3 mt-5 border-top">
+    <div class="container">
+      <p class="mb-0">
+        © {{ year }} Nathan Hansle | Movie App
+      </p>
+    </div>
+  </footer>
 </template>
 
 <script setup>
-import { ref } from "vue";
-
-const year = (new Date).getFullYear();
+const year = new Date().getFullYear();
 </script>
 
-<style>
-/* Add any component specific styles here */
+<style scoped>
+footer {
+  width: 100%;
+}
 </style>

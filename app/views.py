@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, current_app
+from flask import Blueprint, render_template, request, jsonify, current_app, send_from_directory
 from werkzeug.utils import secure_filename
 from flask_wtf.csrf import generate_csrf
 from .forms import MovieForm
@@ -13,6 +13,11 @@ def index():
     return jsonify(message="This is the beginning of our API")
 
 
+@views.route('/api/v1/csrf-token', methods=['GET'])
+def get_csrf():
+    return jsonify({'csrf_token': generate_csrf()})
+
+
 @views.route('/api/v1/movies', methods=['POST'])
 def movies():
     form = MovieForm()
@@ -21,7 +26,7 @@ def movies():
         poster = form.poster.data
         filename = secure_filename(poster.filename)
 
-        upload_folder = current_app.config['UPLOAD_FOLDER']
+        upload_folder = os.path.join(current_app.root_path, current_app.config['UPLOAD_FOLDER'])
         os.makedirs(upload_folder, exist_ok=True)
 
         poster_path = os.path.join(upload_folder, filename)
@@ -48,6 +53,30 @@ def movies():
     }), 400
 
 
+@views.route('/api/v1/movies', methods=['GET'])
+def add_movies():
+    movies = Movie.query.all()
+
+    movie_list = []
+    for movie in movies:
+        movie_list.append({
+            "id": movie.id,
+            "title": movie.title,
+            "description": movie.description,
+            "poster": f"/api/v1/posters/{movie.poster}"
+        })
+
+    return jsonify({
+        "movies": movie_list
+    })
+
+
+@views.route('/api/v1/posters/<filename>', methods=['GET'])
+def get_poster(filename):
+    upload_folder = os.path.join(current_app.root_path, current_app.config['UPLOAD_FOLDER'])
+    return send_from_directory(upload_folder, filename)
+
+
 def form_errors(form):
     error_messages = []
     for field, errors in form.errors.items():
@@ -67,10 +96,6 @@ def send_text_file(file_name):
     return current_app.send_static_file(file_dot_text)
 
 
-@views.route('/api/v1/csrf-token', methods=['GET'])
-def get_csrf():
-    return jsonify({'csrf_token': generate_csrf()})
-
 @views.after_app_request
 def add_header(response):
     response.headers['X-UA-Compatible'] = 'IE=Edge,chrome=1'
@@ -80,4 +105,4 @@ def add_header(response):
 
 @views.app_errorhandler(404)
 def page_not_found(error):
-    return render_template('404.html'), 404
+    return jsonify({"error": "Page not found"}), 404
